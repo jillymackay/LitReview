@@ -22,7 +22,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Attaching packages -------------------------------------------------------------------------------- tidyverse 1.2.1 --
+## -- Attaching packages --------------------------------------------------------------------------------- tidyverse 1.2.1 --
 ```
 
 ```
@@ -33,7 +33,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Conflicts ----------------------------------------------------------------------------------- tidyverse_conflicts() --
+## -- Conflicts ------------------------------------------------------------------------------------ tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()
 ```
@@ -41,7 +41,6 @@ library(tidyverse)
 ```r
 library(stringr)
 library(knitr)
-library(kableExtra)
 library(tibble)
 library(wesanderson)
 library(tm)
@@ -68,6 +67,10 @@ library(wordcloud)
 
 ```
 ## Loading required package: RColorBrewer
+```
+
+```r
+library(textstem)
 ```
 
 # Search Protocol
@@ -186,30 +189,20 @@ Need to reorder this somehow
 
 
 ### Wordles
-This is not working yet!
-
-
-```r
-Abstract.corpus <- Corpus(VectorSource(LRecs$Abstract)) %>%
-  tm_map(removePunctuation) %>%
-  tm_map(removeNumbers) %>%
-  tm_map(tolower)  %>%
-  tm_map(removeWords, stopwords("english")) %>%
-  tm_map(stripWhitespace) %>%
-  tm_map(PlainTextDocument)
-```
-
-Then...
+Visualise roughly what is being said in the abstracts of these papers.
 
 ```r
-Abstract.dtm <- DocumentTermMatrix(Abstract.corpus)
+LRecs$LemAbstracts <- lemmatize_strings(LRecs$Abstract)
+Abstract.corpus <- Corpus(VectorSource(LRecs$LemAbstracts)) %>%
+     tm_map(removePunctuation) %>%
+     tm_map(removeNumbers) %>%
+     tm_map(tolower)  %>%
+     tm_map(removeWords, stopwords("english")) %>%
+     tm_map(removeWords, c("lecture", "record", "capture")) %>%
+     tm_map(stripWhitespace)
+
+Abstract.Wordle <- wordcloud(Abstract.corpus, scale = c(5,0.5), max.words = 100, random.order = FALSE, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Darjeeling"))
 ```
-Getting the following error:
-`Error in simple_triplet_matrix(i, j, v, nrow = length(terms), ncol = length(corpus),  : 
-  'i, j' invalid`
-  
-Something about the text having too much N/A stuff? Achhhh I can't do this any longer tonight. 
-  
 
-
+![](LitReviewMethods_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
