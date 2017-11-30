@@ -1,5 +1,5 @@
 ---
-title: "Working Notes"
+title: "WIP: Quantitative Lit Review Methodology"
 author: "Jilly MacKay"
 date: "29 November 2017"
 output: 
@@ -10,14 +10,17 @@ output:
     toc: true 
     toc_float: true
     toc_depth: 3
+    
 ---
 # About this Methodology
-Lit reviews should be as repeatable as any other methodology. 
+Trying to establish a repeatable (and therefore less time-dependent) methodology for quantitative summaries of literature review searches.
 
+**Please note I am not implying that this is all a literature search is - I just want a repeatable methodology for the data processing part!**
 
 ## R Environment
 
 ```r
+# Remember any packages you don't have can be installed with "install.packages("package.name")"
 library(tidyverse)
 ```
 
@@ -75,9 +78,21 @@ library(textstem)
 
 # Search Protocol
 ## Web of Science Search
-In this example, searching for "lecture recording" OR "lecture capture" in Web of Knowledge (29/11/2017). Save to other formats - tab delimited. 
+Go to [Web of Science](https://webofknowledge.com/) and perform your search. In this case, we're searching for "lecture recording" OR "lecture capture" across all years. 
 
-(Had to save the tab delimited as a csv to read it in properly!)
+Once the search results have loaded go to the option at the top of the search results which, by default, reads `Save to EndNote online` and scroll down to `Save to other File Formats`. 
+
+After clicking this, a pop up will ask you how many records you want to save, add the first and last record number in the `Records` box, and change `Record Content` to `Full Record`.
+
+The `File Format` you want is `Tab-delimited (Windows UTF-8)`
+Save this file. 
+
+### Current Unsolved Problem
+At some point I want to be able to read this file into R directly and manage it from there, but R is having real trouble reading the format of the file, even when it is UTF-8. 
+
+Therefore, I have to open this file in Excel and save it as a .csv file. The file we're working with is therefore `lrec.csv`
+
+
 
 # Data Management Protocol
 ## Reading in the Data
@@ -157,8 +172,8 @@ LRecs <-
 
 
 
-## Exploring the Data
-### Publications by Time
+# Exploring the Data
+## Publications by Time
 
 ```r
 ByYear <- ggplot (data = LRecs, aes(x = Year.Published, fill=..count..)) + 
@@ -172,7 +187,7 @@ ByYear
 
 ![](LitReviewMethods_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
-### Publications by Source
+## Publications by Source
 
 ```r
 BySource <- ggplot (data = LRecs, aes(x = ISO.Source.Abbrev, fill=..count..)) + 
@@ -185,10 +200,11 @@ BySource
 
 ![](LitReviewMethods_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
-Need to reorder this somehow
+### Current Unsolved Problem
+Need a neat way to reorder this
 
 
-### Wordles
+## Visualise Abstracts
 Visualise roughly what is being said in the abstracts of these papers.
 
 ```r
