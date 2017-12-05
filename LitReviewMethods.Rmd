@@ -1,5 +1,5 @@
 ---
-title: "Working Notes"
+title: "WIP: Quantitative Lit Review Methodology"
 author: "Jilly MacKay"
 date: "29 November 2017"
 output: 
@@ -10,28 +10,43 @@ output:
     toc: true 
     toc_float: true
     toc_depth: 3
+    
 ---
 # About this Methodology
-Lit reviews should be as repeatable as any other methodology. 
+Trying to establish a repeatable (and therefore less time-dependent) methodology for quantitative summaries of literature review searches.
 
+**Please note I am not implying that this is all a literature search is - I just want a repeatable methodology for the data processing part!**
 
 ## R Environment
 ```{r}
+# Remember any packages you don't have can be installed with "install.packages("package.name")"
 library(tidyverse)
 library(stringr)
 library(knitr)
-library(kableExtra)
 library(tibble)
 library(wesanderson)
 library(tm)
 library(wordcloud)
+library(textstem)
 ```
 
 # Search Protocol
 ## Web of Science Search
-In this example, searching for "lecture recording" OR "lecture capture" in Web of Knowledge (29/11/2017). Save to other formats - tab delimited. 
+Go to [Web of Science](https://webofknowledge.com/) and perform your search. In this case, we're searching for "lecture recording" OR "lecture capture" across all years. 
 
-(Had to save the tab delimited as a csv to read it in properly!)
+Once the search results have loaded go to the option at the top of the search results which, by default, reads `Save to EndNote online` and scroll down to `Save to other File Formats`. 
+
+After clicking this, a pop up will ask you how many records you want to save, add the first and last record number in the `Records` box, and change `Record Content` to `Full Record`.
+
+The `File Format` you want is `Tab-delimited (Windows UTF-8)`
+Save this file. 
+
+### Current Unsolved Problem
+At some point I want to be able to read this file into R directly and manage it from there, but R is having real trouble reading the format of the file, even when it is UTF-8. 
+
+Therefore, I have to open this file in Excel and save it as a .csv file. The file we're working with is therefore `lrec.csv`
+
+
 
 # Data Management Protocol
 ## Reading in the Data
@@ -110,8 +125,8 @@ LRecs <-
 
 
 
-## Exploring the Data
-### Publications by Time
+# Exploring the Data
+## Publications by Time
 ```{r}
 ByYear <- ggplot (data = LRecs, aes(x = Year.Published, fill=..count..)) + 
   geom_histogram(binwidth = 1) + 
@@ -122,7 +137,7 @@ ByYear <- ggplot (data = LRecs, aes(x = Year.Published, fill=..count..)) +
 ByYear
 ```
 
-### Publications by Source
+## Publications by Source
 ```{r}
 BySource <- ggplot (data = LRecs, aes(x = ISO.Source.Abbrev, fill=..count..)) + 
   geom_bar() + 
@@ -132,33 +147,23 @@ BySource <- ggplot (data = LRecs, aes(x = ISO.Source.Abbrev, fill=..count..)) +
 BySource
 ```
 
-Need to reorder this somehow
+### Current Unsolved Problem
+Need a neat way to reorder this
 
 
-### Wordles
-This is not working yet!
-
+## Visualise Abstracts
+Visualise roughly what is being said in the abstracts of these papers.
 ```{r}
-Abstract.corpus <- Corpus(VectorSource(LRecs$Abstract)) %>%
-  tm_map(removePunctuation) %>%
-  tm_map(removeNumbers) %>%
-  tm_map(tolower)  %>%
-  tm_map(removeWords, stopwords("english")) %>%
-  tm_map(stripWhitespace) %>%
-  tm_map(PlainTextDocument)
+LRecs$LemAbstracts <- lemmatize_strings(LRecs$Abstract)
+Abstract.corpus <- Corpus(VectorSource(LRecs$LemAbstracts)) %>%
+     tm_map(removePunctuation) %>%
+     tm_map(removeNumbers) %>%
+     tm_map(tolower)  %>%
+     tm_map(removeWords, stopwords("english")) %>%
+     tm_map(removeWords, c("lecture", "record", "capture")) %>%
+     tm_map(stripWhitespace)
+
+Abstract.Wordle <- wordcloud(Abstract.corpus, scale = c(5,0.5), max.words = 100, random.order = FALSE, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Darjeeling"))
 
 ```
-
-Then...
-```{r, eval=FALSE}
-Abstract.dtm <- DocumentTermMatrix(Abstract.corpus)
-```
-Getting the following error:
-`Error in simple_triplet_matrix(i, j, v, nrow = length(terms), ncol = length(corpus),  : 
-  'i, j' invalid`
-  
-Something about the text having too much N/A stuff? Achhhh I can't do this any longer tonight. 
-  
-
-
 
