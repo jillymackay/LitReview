@@ -1,7 +1,7 @@
 ---
 title: "WIP: Quantitative Lit Review Methodology"
 author: "Jilly MacKay"
-date: "29 November 2017"
+date: "5 December 2017"
 output: 
   html_document:
     keep_md: true
@@ -25,7 +25,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Attaching packages -------------------------------------------------------------------------------- tidyverse 1.2.1 --
+## -- Attaching packages --------------------------------------------------------------------------------- tidyverse 1.2.1 --
 ```
 
 ```
@@ -36,7 +36,7 @@ library(tidyverse)
 ```
 
 ```
-## -- Conflicts ----------------------------------------------------------------------------------- tidyverse_conflicts() --
+## -- Conflicts ------------------------------------------------------------------------------------ tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()
 ```
@@ -74,10 +74,6 @@ library(wordcloud)
 
 ```r
 library(textstem)
-```
-
-```
-## Warning: package 'textstem' was built under R version 3.4.3
 ```
 
 # Search Protocol

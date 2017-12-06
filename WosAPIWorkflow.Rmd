@@ -1,0 +1,69 @@
+---
+title: "WoS API Workflow"
+author: "Jill MacKay"
+date: "6 December 2017"
+output:
+    html_document:
+    keep_md: true
+    theme: spacelab
+    highlight: haddock
+    toc: true 
+    toc_float: true
+    toc_depth: 3
+---
+
+# WoS API
+Web of Science Web Services API by [Juba](https://github.com/juba/rwos) allows for a much smoother workflow, although you get less data in return. 
+
+# Important Caveat
+The `rwos` package is still under development (report any issues to [Juba](https://github.com/juba/rwos). You may not receive the exact same search results from this code as you would a Web of Science search)
+
+# R Environment
+At present (December, 2017) you need to install `rwos` directly from github. 
+```{r eval=FALSE}
+require(devtools)
+library(devtools)
+install_github("juba/rwos")
+```
+
+```{r}
+library(rwos)
+
+# Remember any of the below packages can be installed with "install.packages("package.name")" if you don't have them
+library(tidyverse)
+library(stringr)
+library(knitr)
+library(tibble)
+library(wesanderson)
+library(tm)
+library(wordcloud)
+library(textstem)
+```
+
+# Reading Data from WoS
+## Authenticate the WoS Service
+The first step is to authenticate the WoS server. You need to be using an IP address with WoS access, e.g. a university computer or a VPN connection.
+```{r}
+sid <- wos_authenticate()
+```
+
+## Search WoS 
+Next you want to run a search and save the output of that search accordingly. 
+
+```{r}
+search.lecturecapture <- wos_search(sid, 'TO=("lecture capture")  OR TO=("lecture recording")')
+pubs.lecturecapture <- wos_retrieve_all(search.lecturecapture)
+```
+### Current Unsolved Issue
+The `wos_search` function is not giving me the exact same results as the WoS interface does (156 records vs 198) - check between the two and find out what's missing. 
+
+## Check Results
+```{r}
+summary(pubs.lecturecapture)
+```
+
+### To Do
+Change classes of data to categoricals (maybe with a `parse` command)
+
+
+
