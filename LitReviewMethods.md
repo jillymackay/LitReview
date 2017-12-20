@@ -288,7 +288,7 @@ findFreqTerms(Abstract.dtm, 20)
 ```
 
 ```r
-Abstract.Wordle <- wordcloud(Abstract.corpus, scale = c(5,0.5), max.words = 100, random.order = FALSE, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Darjeeling"))
+Abstract.Wordle <- wordcloud(Abstract.corpus, scale = c(5,0.5), max.words = 50, random.order = FALSE, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Darjeeling"))
 ```
 
 ![](LitReviewMethods_files/figure-html/unnamed-chunk-5-1.png)<!-- -->

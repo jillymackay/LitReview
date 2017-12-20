@@ -31,6 +31,7 @@ library(rwos)
 
 # Remember any of the below packages can be installed with "install.packages("package.name")" if you don't have them
 library(tidyverse)
+library(forcats)
 library(stringr)
 library(knitr)
 library(tibble)
@@ -59,11 +60,110 @@ The `wos_search` function is not giving me the exact same results as the WoS int
 
 ## Check Results
 ```{r}
+pubs.lecturecapture <- 
+  pubs.lecturecapture %>%
+  mutate (uid = as.factor(uid),
+          journal = as.factor(journal),
+          issue = as.factor(issue),
+          volume = as.factor (volume),
+          year = as.numeric (year),
+          doi = as.factor(doi),
+          article_no = as.factor(article_no),
+          isi_id = as.factor(isi_id),
+          issn = as.factor(issn),
+          isbn= as.factor(isbn))
 summary(pubs.lecturecapture)
 ```
 
-### To Do
-Change classes of data to categoricals (maybe with a `parse` command)
+
+# Quick Visualisations
+## Publications by Time
+```{r}
+pubs.byyear <- ggplot (data = pubs.lecturecapture, aes(x = year, fill=..count..)) + 
+  geom_histogram(binwidth = 1) + 
+  labs (title = "Lecture Recoding Publications by Year", x = "Publication Year") + 
+  theme_bw() + scale_fill_gradientn(colors = wes_palette("Royal1"))  + 
+  theme(axis.text.x = element_text(angle = 90), panel.grid = element_blank()) + 
+  scale_x_continuous(breaks = seq(1999,2017,1))
+# Remember to check these x label breaks match with the min, max values of the dataset!
+pubs.byyear
+```
 
 
+## What Are People Writing About?
+### Visualise KeyWords
+```{r}
+
+pubs.lecturecapture$LemKeywords <- lemmatize_strings(pubs.lecturecapture$keywords)
+keywords.corpus <- Corpus(VectorSource(pubs.lecturecapture$LemKeywords)) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(tolower)  %>%
+  tm_map(removeWords, stopwords("english")) %>%
+  tm_map(removeWords, c("lecture", "record", "capture")) %>%
+  tm_map(stripWhitespace)
+
+keywords.dtm <- DocumentTermMatrix(keywords.corpus)
+inspect(keywords.dtm)
+findFreqTerms(keywords.dtm, 5)
+
+keyword.wordle <- wordcloud(keywords.corpus, random.order = FALSE, max.words = 50, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Royal1"))
+
+```
+
+### Visualise Titles
+```{r}
+pubs.lecturecapture$LemTitles <- lemmatize_strings(pubs.lecturecapture$title)
+titles.corpus <- Corpus(VectorSource(pubs.lecturecapture$LemTitles)) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(tolower)  %>%
+  tm_map(removeWords, stopwords("english")) %>%
+  tm_map(removeWords, c("lecture", "record", "capture")) %>%
+  tm_map(stripWhitespace)
+
+titles.dtm <- DocumentTermMatrix(titles.corpus)
+inspect(titles.dtm)
+findFreqTerms(titles.dtm, 5)
+
+titles.wordle <- wordcloud(titles.corpus, random.order = FALSE, max.words = 50, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Royal1"))
+```
+
+
+
+
+
+
+
+
+
+
+
+# Current Unsolved Problem 
+The journal field is too detailed - how do we filter this better?
+
+
+## Publications by Source
+```{r}
+
+by.journal <- 
+          pubs.lecturecapture %>%
+          filter(journal !="") %>%
+          group_by(journal) 
+
+by.journal <- within(by.journal, 
+                   journal <- factor(journal, 
+                                      levels=names(sort(table(journal), 
+                                                        decreasing=TRUE))))
+
+
+pubs.bysource <- ggplot (data = by.journal, aes(x = journal, fill=..count..)) + 
+  geom_bar() + 
+  labs (title = "Lecture Recoding Publications by Source", x = "Source Name", y = "N Publications") + 
+  theme_bw() + scale_fill_gradientn(colors = wes_palette("Royal1"))  + 
+  theme(axis.text.x = element_text(angle = 90), panel.grid = element_blank()) 
+ 
+#Again - check the scaling of the y axis by the summary of the data
+pubs.bysource
+```
 
