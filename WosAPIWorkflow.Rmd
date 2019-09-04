@@ -1,7 +1,7 @@
 ---
 title: "WoS API Workflow"
 author: "Jill MacKay"
-date: "20 December 2017"
+date: "04 September 2019"
 output:
     html_document:
     keep_md: true
@@ -19,7 +19,7 @@ Web of Science Web Services API by [Juba](https://github.com/juba/rwos) allows f
 The `rwos` package is still under development (report any issues to [Juba](https://github.com/juba/rwos). You may not receive the exact same search results from this code as you would a Web of Science search)
 
 # R Environment
-At present (December, 2017) you need to install `rwos` directly from github. 
+At present (September, 2019) you need to install `rwos` directly from github. 
 ```{r eval=FALSE}
 require(devtools)
 library(devtools)
@@ -31,14 +31,14 @@ library(rwos)
 
 # Remember any of the below packages can be installed with "install.packages("package.name")" if you don't have them
 library(tidyverse)
-library(forcats)
-library(stringr)
 library(knitr)
-library(tibble)
 library(wesanderson)
-library(tm)
+library(tidytext)
 library(wordcloud)
 library(textstem)
+
+# and then for the pretty colours
+library(wesanderson)
 ```
 
 # Reading Data from WoS
@@ -52,11 +52,13 @@ sid <- wos_authenticate()
 Next you want to run a search and save the output of that search accordingly. 
 
 ```{r}
-search.lecturecapture <- wos_search(sid, 'TO=("lecture capture")  OR TO=("lecture recording")')
+search.lecturecapture <- 
+  wos_search(sid, 'TO=("lecture capture")  OR TO=("lecture recording")')
+
 pubs.lecturecapture <- wos_retrieve_all(search.lecturecapture)
 ```
 ### Current Unsolved Issue
-The `wos_search` function is not giving me the exact same results as the WoS interface does (156 records vs 198) - check between the two and find out what's missing. 
+The `wos_search` function is not giving me the exact same results as the WoS interface does (156 records vs 242) - check between the two and find out what's missing. 
 
 ## Check Results
 ```{r}
@@ -79,13 +81,19 @@ summary(pubs.lecturecapture)
 # Quick Visualisations
 ## Publications by Time
 ```{r}
-pubs.byyear <- ggplot (data = pubs.lecturecapture, aes(x = year, fill=..count..)) + 
+pubs.byyear <- 
+  ggplot (data = pubs.lecturecapture, 
+          aes(x = year, fill=..count..)) + 
   geom_histogram(binwidth = 1) + 
-  labs (title = "Lecture Recoding Publications by Year", x = "Publication Year") + 
-  theme_bw() + scale_fill_gradientn(colors = wes_palette("Royal1"))  + 
-  theme(axis.text.x = element_text(angle = 90), panel.grid = element_blank()) + 
-  scale_x_continuous(breaks = seq(1999,2017,1))
+  labs (title = "Lecture Recoding Publications by Year", 
+        x = "Publication Year") + 
+  theme_bw() + 
+  scale_fill_gradientn(colors = wes_palette("Royal1"))  + 
+  theme(axis.text.x = element_text(angle = 90), 
+        panel.grid = element_blank()) + 
+  scale_x_continuous(breaks = seq(1999,2019,1))
 # Remember to check these x label breaks match with the min, max values of the dataset!
+
 pubs.byyear
 ```
 
@@ -94,39 +102,55 @@ pubs.byyear
 ### Visualise KeyWords
 ```{r}
 
-pubs.lecturecapture$LemKeywords <- lemmatize_strings(pubs.lecturecapture$keywords)
-keywords.corpus <- Corpus(VectorSource(pubs.lecturecapture$LemKeywords)) %>%
-  tm_map(removePunctuation) %>%
-  tm_map(removeNumbers) %>%
-  tm_map(tolower)  %>%
-  tm_map(removeWords, stopwords("english")) %>%
-  tm_map(removeWords, c("lecture", "record", "capture")) %>%
-  tm_map(stripWhitespace)
+mystops <- tibble(word = c("lecture", "record", "capture"),
+                  lexicon = c("my", "my", "my")) 
 
-keywords.dtm <- DocumentTermMatrix(keywords.corpus)
-inspect(keywords.dtm)
-findFreqTerms(keywords.dtm, 5)
+mystops <- rbind(mystops, stop_words)
 
-keyword.wordle <- wordcloud(keywords.corpus, random.order = FALSE, max.words = 50, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Royal1"))
+tidy_keywords <- 
+  pubs.lecturecapture %>% 
+  unnest_tokens(word, keywords, token = "words") %>% 
+  mutate(word = lemmatize_strings(word)) %>% 
+  anti_join(mystops) 
+
+
+
+tidy_keywords %>% 
+  count(word) %>% 
+  with(wordcloud(words = word, 
+                 freq = n, 
+                 random.order = FALSE, 
+                 max.words = 50,
+                 random.color = FALSE, 
+                 rot.per = 0, 
+                 use.r.layout = FALSE, 
+                 colors = wes_palette("Royal1")))
+
+
 
 ```
 
 ### Visualise Titles
 ```{r}
-pubs.lecturecapture$LemTitles <- lemmatize_strings(pubs.lecturecapture$title)
-titles.corpus <- Corpus(VectorSource(pubs.lecturecapture$LemTitles)) %>%
-  tm_map(removePunctuation) %>%
-  tm_map(removeNumbers) %>%
-  tm_map(tolower)  %>%
-  tm_map(removeWords, stopwords("english")) %>%
-  tm_map(removeWords, c("lecture", "record", "capture")) %>%
-  tm_map(stripWhitespace)
+tidy_titles <- 
+  pubs.lecturecapture %>% 
+  unnest_tokens(word, title, token = "words") %>% 
+  mutate(word = lemmatize_strings(word)) %>% 
+  anti_join(mystops) 
 
-titles.dtm <- DocumentTermMatrix(titles.corpus)
-inspect(titles.dtm)
-findFreqTerms(titles.dtm, 5)
 
-titles.wordle <- wordcloud(titles.corpus, random.order = FALSE, max.words = 50, random.color = FALSE, rot.per = 0, use.r.layout = FALSE, colors = wes_palette("Royal1"))
+
+tidy_titles %>% 
+  count(word) %>% 
+  with(wordcloud(words = word, 
+                 freq = n, 
+                 random.order = FALSE, 
+                 max.words = 50,
+                 random.color = FALSE, 
+                 rot.per = 0, 
+                 use.r.layout = FALSE, 
+                 colors = wes_palette("Royal1")))
+
 ```
 
 
