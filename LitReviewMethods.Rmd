@@ -31,7 +31,9 @@ library(textstem)
 # I'm using some nice palette packages for the chart 
 # This is entirely up to you
 
+
 library(wesanderson)
+
 
 ```
 
